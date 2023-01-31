@@ -4,6 +4,8 @@ set -e
 
 if ! source stats.sh; then
     echo "stats.sh not found" >&2; exit 1
+elif [[ $# != 4 ]]; then
+    echo "error: Expected 4 arguments, got $#" >&2; exit 1
 fi
 
 # https://linuxconfig.org/how-to-use-arrays-in-bash-script
@@ -28,22 +30,18 @@ declare -a bg_colors=(
     "\033[40m" # black
 )
 
-function abort_if_invalid_num {
+function abort_if_invalid_code {
     if [[ ! $1 =~ ^[1-6]$ ]]; then
         echo "error: Expected a number from 1 to 6, got '$1'" >&2; exit 1
     fi
 }
 
-if [[ $# != 4 ]]; then
-    echo "error: Expected 4 arguments, got $#" >&2; exit 1
-fi
+abort_if_invalid_code $1
+abort_if_invalid_code $2
+abort_if_invalid_code $3
+abort_if_invalid_code $4
 
-abort_if_invalid_num $1
-abort_if_invalid_num $2
-abort_if_invalid_num $3
-abort_if_invalid_num $4
-
-if [[ "$1" == "$2" || "$3" == "$4" ]]; then
+if [[ $1 == $2 || $3 == $4 ]]; then
     echo "error: Background and font colors are the same" >&2
     echo "Rerun with 6 2 6 3, for example" >&2
     exit 1
