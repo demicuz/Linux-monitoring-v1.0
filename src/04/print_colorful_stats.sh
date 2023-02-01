@@ -32,7 +32,7 @@ declare -a bg_colors=(
 # $2 - font color of value names (HOSTNAME..)
 # $3 - background of values
 # $4 - font color of values
-echo "$stats" | awk -F ' = '   \
+echo "$stats" | awk            \
     -v c0="${font_colors[0]}"  \
     -v c1="${bg_colors[$1]}"   \
     -v c2="${font_colors[$2]}" \
@@ -44,5 +44,5 @@ echo "$stats" | awk -F ' = '   \
         c1, c2,
         $1, c0,
         c3, c4,
-        $2, c0);
-}'
+        $3, c0);
+}' | column -t

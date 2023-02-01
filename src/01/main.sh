@@ -2,8 +2,6 @@
 
 set -e
 
-# https://stackoverflow.com/a/806923
-
 if ! source num_regexp.sh; then
     echo "num_regexp.sh not found" >&2; exit 1
 fi

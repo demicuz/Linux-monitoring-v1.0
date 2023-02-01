@@ -2,6 +2,8 @@
 
 set -e
 
+# Requires ifconfig and ifdata to be installed
+
 _timezone=$(timedatectl show --property=Timezone | cut -d= -f2)
 _uptime=$(uptime -p)
 _interface=$(netstat -i | tail -n+3 | grep -v "^lo\s" | head -n 1 | cut -d' ' -f1)
@@ -15,7 +17,7 @@ USER            = $(whoami)
 OS              = $(cat /etc/os-release | grep "^PRETTY_NAME=" | cut -d= -f2 | tr -d '"')
 DATE            = $(date +"%d %b %Y %T")
 UPTIME          = ${_uptime#"up "}
-UPTIME_SEC      = $(cat /proc/uptime | awk '{print int ($1) " sec"}')
+UPTIME_SEC      = $(cat /proc/uptime | awk '{ print int ($1) " sec" }')
 IP              = $(ifdata -pa $_interface)
 MASK            = $(ifdata -pn $_interface)
 GATEWAY         = $(ip r | grep "default via" | cut -d' ' -f3)
