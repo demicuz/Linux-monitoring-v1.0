@@ -4,9 +4,9 @@ set -e
 
 if [[ $# != 0 ]] ; then
     echo "error: Arguments are not supported" >&2; exit 1
-elif ! source stats.sh; then
-    echo "stats.sh not found" >&2; exit 1
 fi
+
+source stats.sh
 
 echo "$stats"
 filename="$(date +"%d_%m_%y_%H_%M_%S").status"

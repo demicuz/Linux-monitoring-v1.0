@@ -2,11 +2,11 @@
 
 set -e
 
-if ! source colors.conf; then
-    echo "colors.conf not found" >&2; exit 1
-elif [[ $# != 0 ]]; then
+if [[ $# != 0 ]]; then
     echo "error: Expected 0 arguments, got $#" >&2; exit 1
 fi
+
+source colors.conf
 
 # https://unix.stackexchange.com/a/594845
 c1_bg=${column1_background:-6}

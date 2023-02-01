@@ -2,9 +2,7 @@
 
 set -e
 
-if ! source stats.sh; then
-    echo "stats.sh not found" >&2; exit 1
-fi
+source stats.sh
 
 # https://linuxconfig.org/how-to-use-arrays-in-bash-script
 

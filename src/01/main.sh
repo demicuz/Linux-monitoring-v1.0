@@ -2,9 +2,7 @@
 
 set -e
 
-if ! source num_regexp.sh; then
-    echo "num_regexp.sh not found" >&2; exit 1
-fi
+source num_regexp.sh
 
 if [[ $# != 1 ]] ; then
     echo "error: Wrong number of arguments" >&2; exit 1
