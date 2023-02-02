@@ -51,24 +51,29 @@ fi
 echo "Total number of files: $file_count"
 
 if [[ $file_count != "0" ]]; then
-    conf_count=$(find $target_dir -mindepth 1 -type f -iname "*.conf" -printf _ | wc -c)
-    # TODO `-exec grep -Iq .` is VERY slow. But `file` is even slower.
-    text_count=$(find $target_dir -mindepth 1 -type f -exec grep -Iq . {} \; -printf _ | wc -c)
-    exec_count=$(find $target_dir -mindepth 1 -type f -executable -printf _ | wc -c)
-    log_count=$(find $target_dir -mindepth 1 -type f -iname "*.log" -printf _ | wc -c)
-    archive_count=$(7z t $target_dir 2> /dev/null | grep "^OK archives: " | cut -d' ' -f3)
-    link_count=$(find $target_dir -mindepth 1 -type l -printf _ | wc -c)
+    echo "Number of:"
 
-    echo "\
-Number of:
-Configuration files (with the .conf extension): $conf_count
-Text files: $text_count
-Executable files: $exec_count
-Log files (with the extension .log): $log_count
-Archive files: $archive_count
-Symbolic links: $link_count
-TOP 10 largest files arranged in descending order (path, size and type):"
+    echo -n "Configuration files (with the .conf extension): "
+    echo $(find $target_dir -mindepth 1 -type f -iname "*.conf" -printf _ | wc -c)
+
+    # TODO `-exec grep -Iq .` is VERY slow. But `file` is even slower.
+    echo -n "Text files: $text_count"
+    echo $(find $target_dir -mindepth 1 -type f -exec grep -Iq . {} \; -printf _ | wc -c)
+
+    echo -n "Executable files: $exec_count"
+    echo $(find $target_dir -mindepth 1 -type f -executable -printf _ | wc -c)
+
+    echo -n "Log files (with the extension .log): $log_count"
+    echo $(find $target_dir -mindepth 1 -type f -iname "*.log" -printf _ | wc -c)
+
+    echo -n "Archive files: $archive_count"
+    echo $(7z t $target_dir 2> /dev/null | grep "^OK archives: " | cut -d' ' -f3)
+
+    echo -n "Symbolic links: $link_count"
+    echo $(find $target_dir -mindepth 1 -type l -printf _ | wc -c)
+
+    echo "TOP 10 largest files arranged in descending order (path, size and type):"
     print_top_10_files $target_dir
-    echo "\
-TOP 10 largest executable files arranged in descending order (path, size and MD5 hash of file):"
+
+    echo "TOP 10 largest executable files arranged in descending order (path, size and MD5 hash of file):"
 fi
