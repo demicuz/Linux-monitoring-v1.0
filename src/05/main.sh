@@ -18,8 +18,7 @@ fi
 # ...
 # Kinda breaks if directory names contain `\n`.
 function print_top_5_dirs {
-    find $1 -mindepth 1 -maxdepth 1 -type d -print0 \
-    | xargs -r0 du -sh \
+    find $1 -mindepth 1 -maxdepth 1 -type d -exec du -sh {} \; \
     | sort -rh \
     | head -n 5 \
     | awk '
@@ -30,12 +29,18 @@ function print_top_5_dirs {
     | column -t -o ' '
 }
 
-# Print as many x's as there are files, because a filename can contain basically
+function print_top_10_files {
+    find $1 -type f -exec du -h {} \; \
+    | sort -rh \
+    | head -n 10
+}
+
+# Print as many _'s as there are files, because a filename can contain basically
 # any character. Yes, `find | wc -l` will count multiple times the files in `\n`
 # in their name. I won't ever name my files like that, but it's possible to do
 # that.
-dir_count=$(find $target_dir -mindepth 1 -type d -printf x | wc -c)
-file_count=$(find $target_dir -mindepth 1 -type f -printf x | wc -c)
+dir_count=$(find $target_dir -mindepth 1 -type d -printf _ | wc -c)
+file_count=$(find $target_dir -mindepth 1 -type f -printf _ | wc -c)
 
 echo "Total directories (including all nested ones): $dir_count"
 if [[ $dir_count != "0" ]]; then
@@ -46,13 +51,13 @@ fi
 echo "Total number of files: $file_count"
 
 if [[ $file_count != "0" ]]; then
-    conf_count=$(find $target_dir -mindepth 1 -type f -iname "*.conf" -printf x | wc -c)
+    conf_count=$(find $target_dir -mindepth 1 -type f -iname "*.conf" -printf _ | wc -c)
     # TODO `-exec grep -Iq .` is VERY slow. But `file` is even slower.
-    text_count=$(find $target_dir -mindepth 1 -type f -exec grep -Iq . {} \; -printf x | wc -c)
-    exec_count=$(find $target_dir -mindepth 1 -type f -executable -printf x | wc -c)
-    log_count=$(find $target_dir -mindepth 1 -type f -iname "*.log" -printf x | wc -c)
+    text_count=$(find $target_dir -mindepth 1 -type f -exec grep -Iq . {} \; -printf _ | wc -c)
+    exec_count=$(find $target_dir -mindepth 1 -type f -executable -printf _ | wc -c)
+    log_count=$(find $target_dir -mindepth 1 -type f -iname "*.log" -printf _ | wc -c)
     archive_count=$(7z t $target_dir 2> /dev/null | grep "^OK archives: " | cut -d' ' -f3)
-    link_count=$(find $target_dir -mindepth 1 -type l -printf x | wc -c)
+    link_count=$(find $target_dir -mindepth 1 -type l -printf _ | wc -c)
 
     echo "\
 Number of:
@@ -61,5 +66,9 @@ Text files: $text_count
 Executable files: $exec_count
 Log files (with the extension .log): $log_count
 Archive files: $archive_count
-Symbolic links: $link_count"
+Symbolic links: $link_count
+TOP 10 largest files arranged in descending order (path, size and type):"
+    print_top_10_files $target_dir
+    echo "\
+TOP 10 largest executable files arranged in descending order (path, size and MD5 hash of file):"
 fi
