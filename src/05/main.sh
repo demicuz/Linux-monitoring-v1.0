@@ -12,7 +12,7 @@ elif [[ ! -a $1 ]]; then
     echo "error: The directory doesn't exist" >&2; exit 1
 fi
 
-# with -maxdepth 1 we avoid this kind of stuff:
+# With -maxdepth 1 we avoid this kind of stuff:
 # 1 - wat/, 300K
 # 2 - wat/.git, 280K
 # ...
@@ -29,10 +29,64 @@ function print_top_5_dirs {
     | column -t -o ' '
 }
 
+# TODO very slow
+# Breaks on `\n` in names too.
 function print_top_10_files {
-    find $1 -type f -exec du -h {} \; \
+    files=$(find $1 -type f -exec du -h {} \; \
     | sort -rh \
-    | head -n 10
+    | head -n 10)
+
+    # "39M    ../Car wheel cap.obj" ->
+    # "39M"
+    sizes=$(echo "$files" | grep -o '^\S*')
+
+    # "39M    ../Car wheel cap.obj" ->
+    # "../Car wheel cap.obj"
+    filenames=$(echo "$files" | sed -E 's/^\S*\s*//g')
+
+    types=$(echo "$filenames" | xargs --delimiter='\n' file -b)
+
+    # Don't ask.
+    # https://stackoverflow.com/a/25050612
+    paste -d ", " \
+    <(echo "$filenames") /dev/null \
+    <(echo "$sizes") /dev/null \
+    <(echo "$types") | awk '
+        {
+            i++;
+            printf("%d - "), i;
+            print
+        }'
+}
+
+function print_top_10_executables {
+    files=$(find $1 -type f -executable -exec du -h {} \; \
+    | sort -rh \
+    | head -n 10)
+
+    # "42M    ../myprog.exe" ->
+    # "42M"
+    sizes=$(echo "$files" | grep -o '^\S*')
+
+    # "42M    ../myprog.exe" ->
+    # "../myprog.exe"
+    filenames=$(echo "$files" | sed -E 's/^\S*\s*//g')
+
+    hashes=$(echo "$filenames" \
+             | xargs --delimiter='\n' md5sum \
+             | awk ' {print $1} ')
+
+    # Don't ask.
+    # https://stackoverflow.com/a/25050612
+    paste -d ", " \
+    <(echo "$filenames") /dev/null \
+    <(echo "$sizes") /dev/null \
+    <(echo "$hashes") | awk '
+        {
+            i++;
+            printf("%d - "), i;
+            print
+        }'
 }
 
 # Print as many _'s as there are files, because a filename can contain basically
@@ -57,23 +111,26 @@ if [[ $file_count != "0" ]]; then
     echo $(find $target_dir -mindepth 1 -type f -iname "*.conf" -printf _ | wc -c)
 
     # TODO `-exec grep -Iq .` is VERY slow. But `file` is even slower.
-    echo -n "Text files: $text_count"
+    echo -n "Text files: "
     echo $(find $target_dir -mindepth 1 -type f -exec grep -Iq . {} \; -printf _ | wc -c)
+    # A much faster approach, but detects only `.txt` files:
+    # echo $(find $target_dir -mindepth 1 -type f -iname "*.txt" -printf _ | wc -c)
 
-    echo -n "Executable files: $exec_count"
+    echo -n "Executable files: "
     echo $(find $target_dir -mindepth 1 -type f -executable -printf _ | wc -c)
 
-    echo -n "Log files (with the extension .log): $log_count"
+    echo -n "Log files (with the extension .log): "
     echo $(find $target_dir -mindepth 1 -type f -iname "*.log" -printf _ | wc -c)
 
-    echo -n "Archive files: $archive_count"
+    echo -n "Archive files: "
     echo $(7z t $target_dir 2> /dev/null | grep "^OK archives: " | cut -d' ' -f3)
 
-    echo -n "Symbolic links: $link_count"
+    echo -n "Symbolic links: "
     echo $(find $target_dir -mindepth 1 -type l -printf _ | wc -c)
 
     echo "TOP 10 largest files arranged in descending order (path, size and type):"
     print_top_10_files $target_dir
 
     echo "TOP 10 largest executable files arranged in descending order (path, size and MD5 hash of file):"
+    print_top_10_executables $target_dir
 fi
