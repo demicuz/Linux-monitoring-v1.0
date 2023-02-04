@@ -19,7 +19,7 @@ source ./utils.sh
 # Print as many _'s as there are files, because a filename can contain basically
 # any character. Yes, `find | wc -l` will count multiple times the files in `\n`
 # in their name. I won't ever name my files like that, but it's possible to do
-# that.
+# that. See https://unix.stackexchange.com/questions/321697
 dir_count=$(find $target_dir -mindepth 1 -type d -printf _ | wc -c)
 file_count=$(find $target_dir -mindepth 1 -type f -printf _ | wc -c)
 
@@ -37,8 +37,9 @@ if [[ $file_count != "0" ]]; then
     echo -n "Configuration files (with the .conf extension): "
     echo $(find $target_dir -mindepth 1 -type f -iname "*.conf" -printf _ | wc -c)
 
-    # TODO `-exec grep -Iq .` is VERY slow. But `file` is even slower.
     echo -n "Text files: "
+    # https://stackoverflow.com/a/13659891
+    # TODO `-exec grep -Iq .` is VERY slow. But `file` is even slower.
     echo $(find $target_dir -mindepth 1 -type f -exec grep -Iq . {} \; -printf _ | wc -c)
     # A much faster approach, but detects only `.txt` files:
     # echo $(find $target_dir -mindepth 1 -type f -iname "*.txt" -printf _ | wc -c)
