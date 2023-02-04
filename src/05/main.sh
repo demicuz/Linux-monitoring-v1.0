@@ -47,7 +47,7 @@ if [[ $file_count != "0" ]]; then
     echo -n "Executable files: "
     echo $(find $target_dir -mindepth 1 -type f -executable -printf _ | wc -c)
 
-    echo -n "Log files (with the extension .log): "
+    echo -n "Log files (with the .log extension): "
     echo $(find $target_dir -mindepth 1 -type f -iname "*.log" -printf _ | wc -c)
 
     echo -n "Archive files: "
