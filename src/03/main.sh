@@ -64,4 +64,4 @@ echo "$stats" | awk            \
         $1, c0,
         c3, c4,
         $3, c0);
-}' | column -t -o ' '
+}' | column -t

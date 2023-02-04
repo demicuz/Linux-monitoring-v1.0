@@ -16,7 +16,7 @@ function print_top_5_dirs {
             i++;
             printf("%d - %s, %s\n"), i, $2, $1
         }' \
-    | column -t -o ' '
+    | column -t
 }
 
 # TODO very slow
