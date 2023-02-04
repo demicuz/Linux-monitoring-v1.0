@@ -2,6 +2,8 @@
 
 set -e
 
+start=`date +%s.%N`
+
 target_dir=$1
 
 if [[ $# != 1 ]]; then
@@ -12,82 +14,7 @@ elif [[ ! -a $1 ]]; then
     echo "error: The directory doesn't exist" >&2; exit 1
 fi
 
-# With -maxdepth 1 we avoid this kind of stuff:
-# 1 - wat/, 300K
-# 2 - wat/.git, 280K
-# ...
-# Kinda breaks if directory names contain `\n`.
-function print_top_5_dirs {
-    find $1 -mindepth 1 -maxdepth 1 -type d -exec du -sh {} \; \
-    | sort -rh \
-    | head -n 5 \
-    | awk '
-        {
-            i++;
-            printf("%d - %s, %s\n"), i, $2, $1
-        }' \
-    | column -t -o ' '
-}
-
-# TODO very slow
-# Breaks on `\n` in names too.
-function print_top_10_files {
-    files=$(find $1 -type f -exec du -h {} \; \
-    | sort -rh \
-    | head -n 10)
-
-    # "39M    ../Car wheel cap.obj" ->
-    # "39M"
-    sizes=$(echo "$files" | grep -o '^\S*')
-
-    # "39M    ../Car wheel cap.obj" ->
-    # "../Car wheel cap.obj"
-    filenames=$(echo "$files" | sed -E 's/^\S*\s*//g')
-
-    types=$(echo "$filenames" | xargs --delimiter='\n' file -b)
-
-    # Don't ask.
-    # https://stackoverflow.com/a/25050612
-    paste -d ", " \
-    <(echo "$filenames") /dev/null \
-    <(echo "$sizes") /dev/null \
-    <(echo "$types") | awk '
-        {
-            i++;
-            printf("%d - "), i;
-            print
-        }'
-}
-
-function print_top_10_executables {
-    files=$(find $1 -type f -executable -exec du -h {} \; \
-    | sort -rh \
-    | head -n 10)
-
-    # "42M    ../myprog.exe" ->
-    # "42M"
-    sizes=$(echo "$files" | grep -o '^\S*')
-
-    # "42M    ../myprog.exe" ->
-    # "../myprog.exe"
-    filenames=$(echo "$files" | sed -E 's/^\S*\s*//g')
-
-    hashes=$(echo "$filenames" \
-             | xargs --delimiter='\n' md5sum \
-             | awk ' {print $1} ')
-
-    # Don't ask.
-    # https://stackoverflow.com/a/25050612
-    paste -d ", " \
-    <(echo "$filenames") /dev/null \
-    <(echo "$sizes") /dev/null \
-    <(echo "$hashes") | awk '
-        {
-            i++;
-            printf("%d - "), i;
-            print
-        }'
-}
+source ./utils.sh
 
 # Print as many _'s as there are files, because a filename can contain basically
 # any character. Yes, `find | wc -l` will count multiple times the files in `\n`
@@ -134,3 +61,8 @@ if [[ $file_count != "0" ]]; then
     echo "TOP 10 largest executable files arranged in descending order (path, size and MD5 hash of file):"
     print_top_10_executables $target_dir
 fi
+
+end=`date +%s.%N`
+
+echo -n "Script execution time (in seconds): "
+echo "$end - $start" | bc | xargs printf "%.2f\n"
